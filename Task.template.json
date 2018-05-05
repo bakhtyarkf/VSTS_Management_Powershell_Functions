@@ -1,0 +1,11 @@
+{
+    "department": "@{triggerBody()?['department']}",
+    "last_access": "@{triggerBody()?['last_access']}",
+    "mail": "@{triggerBody()?['mail']}",
+    "name": "@{triggerBody()?['name']}",
+    "start_date": "@{triggerBody()?['start_date']}",
+    "vstsLicense": "@{triggerBody()?['vstsLicense']}",
+    "vstsaccountstatus": "@{triggerBody()?['vstsaccountstatus']}"
+}
+
+

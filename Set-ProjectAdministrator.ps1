@@ -1,0 +1,73 @@
+
+
+function Set-ProjectAdmin {
+    [OutputType([int])]
+    Param
+    (
+        $userEmail,
+        $projAccessLevel,
+        $projId
+    )
+
+    Begin {
+        $creds = Import-Clixml -Path creds.xml
+        [string]$AccName = $creds.AccountName
+        [string]$userName = $creds.UserName
+        [string]$vstsToken = $creds.Token
+        $VstsAuth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $userName, $vstsToken)))
+    }
+    Process {
+
+        $vstsUserUri = "https://$AccName.vsaex.visualstudio.com/_apis/userentitlements?api-version=4.1-preview"
+        # $vstsUEBody = @{
+        #     accessLevel = @{ accountLicenseType = "express" }
+        #     user = @{ principalName = $userEmail; subjectKind = "user" }
+        #     projectEntitlements = @{ 
+        #         group = @{ groupType = $projAccessLevel }
+        #         projectRef = @{ id = $projId }
+        #     } 
+        # }
+
+        $vstsUEBody = @'
+
+        {
+            
+            "user": {
+              "principalName": "
+'@ + $userEmail + @'         
+",
+              "subjectKind": "user"
+            },
+            "projectEntitlements": [
+              {
+                "group": {
+                  "groupType": "
+'@ + $projAccessLevel + @' 
+"
+                },
+                "projectRef": {
+                  "id": "
+'@ + $projId + @' 
+"
+                }
+              }
+            ]
+          }
+        
+'@
+        Write-Output $vstsUEBody
+
+        $RestParams = @{
+            ContentType = "application/json"
+            Method = 'Post'
+            URI = $vstsUserUri
+            Body = $vstsUEBody
+            Headers = @{Authorization=("Basic {0}" -f $VstsAuth)}
+        }
+
+        Invoke-RestMethod @RestParams
+	
+    }
+    End {
+    }
+}
