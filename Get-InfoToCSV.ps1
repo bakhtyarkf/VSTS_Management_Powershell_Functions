@@ -19,17 +19,10 @@ function Get-InfoToCSV
         [string]$AccName = $creds.AccountName
         [string]$userName = $creds.UserName
         [string]$vstsToken = $creds.Token
+        $Password = $creds.Password | ConvertTo-SecureString
         $vstsUri = "https://$AccName.vsaex.visualstudio.com/_apis/userentitlements?top=500&skip=0&api-version=4.1-preview"
-        $azPass
 
-        if ( Test-Path "./pass.txt") {
-            $azPass = Get-Content "./pass.txt" | ConvertTo-SecureString
-        } else {
-            ConvertFrom-SecureString $(Get-Credential).Password | Out-File pass.txt
-            $azPass = Get-Content "./pass.txt" | ConvertTo-SecureString
-        }
-        $creds = New-Object System.Management.Automation.PSCredential ($userName, $azPass)
-
+        $creds = New-Object System.Management.Automation.PSCredential ($userName, $Password)
         $vstsAuth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $userName,$vstsToken)))
     }
     Process
@@ -49,13 +42,14 @@ function Get-InfoToCSV
         $ADUsersInfo = $userInfo | Select-Object -Property * 
 
         $azUsersInfo =
-            $ADUsersInfo | `
+            $ADUsersInfo |
                 ForEach-Object {
                     if ($_.DisplayName -notmatch '\w\d+') {
                         $props =  @{
                             "AzId"=$_.ObjectId; 
                             "name"=$_.DisplayName; 
-                            "mail"= $_.mail; 
+                            "mail"= $_.mail;
+                            "UPN"= $_.UserPrincipalName;
                             "Department"=$_.department;
                         }
                         $currUser = New-Object -TypeName psobject -Property $props
@@ -66,7 +60,7 @@ function Get-InfoToCSV
 
 
         $vstsOptInfo = 
-            $vstsInfo  | `
+            $vstsInfo  |
                 ForEach-Object {
                     if ($_.DisplayName -notmatch '\w\d+') {
                         $lastAccessedDate;
@@ -90,7 +84,7 @@ function Get-InfoToCSV
                 }
 
         $vstsIds = 
-        $vstsInfo  | `
+        $vstsInfo  |
             ForEach-Object {
                 if ($_.DisplayName -notmatch '\w\d+') {
                     $props =  @{ "id"=$_.id; "mail"=$_.user.mailAddress; }
@@ -99,16 +93,14 @@ function Get-InfoToCSV
                 }
             }
 
-        $azUsersInfo | Where-Object { $_.mail -and $_.department } | ConvertTo-Csv -Delimiter "|" -NoTypeInformation | `
-                        % {$_.Replace('"','')} | Out-File 'azUsersInfo.csv' -Encoding UTF8
+        $azUsersInfo | Where-Object { $_.mail -and $_.department } | ConvertTo-Csv -Delimiter "|" -NoTypeInformation |
+                        % {$_.Replace('"','')} | Out-File 'azUsersInfo.csv' -Encoding UTF8 -Force
 
 
-        $vstsOptInfo | Where-Object { $_.mail } | ConvertTo-CSV -Delimiter "|" -NoTypeInformation | `
-                        % {$_.Replace('"','')} | Out-File 'vstsUsersInfo.csv' -Encoding UTF8
+        $vstsOptInfo | Where-Object { $_.mail } | ConvertTo-CSV -Delimiter "|" -NoTypeInformation |
+                        % {$_.Replace('"','')} | Out-File 'vstsUsersInfo.csv' -Encoding UTF8 -Force
     }
     End
     {
     }
 }
-
-Export-ModuleMember -Function Get-InfoToCSV

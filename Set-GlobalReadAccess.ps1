@@ -1,13 +1,3 @@
-<#
-.Synopsis
-   Short description
-.DESCRIPTION
-   Long description
-.EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-#>
 function Add-UserEntitlement {
     [OutputType([int])]
     Param
@@ -52,8 +42,3 @@ function Add-UserEntitlement {
     End {
     }
 }
-
-# Export-ModuleMember -Function Add-UserEntitlement
-
-
-

@@ -12,3 +12,5 @@
 # End of https://www.gitignore.io/api/powershell
 
 creds.xml
+*.csv
+*.xlsx

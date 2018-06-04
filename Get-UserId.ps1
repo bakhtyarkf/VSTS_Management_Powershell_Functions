@@ -1,7 +1,8 @@
-function Get-Projects
+function Get-UserId
 {
     [CmdletBinding()]
     Param(
+        [Object]$Email
     )
 
     Begin
@@ -13,11 +14,11 @@ function Get-Projects
         $VstsAuth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $userName,$vstsToken)))    
     }
     Process
-    {   
-        $VstsUri = "https://$AccName.visualstudio.com/DefaultCollection/_apis/projects?top=10000&api-version=1.0"
+    {   $VstsUri = "https://$AccName.vsaex.visualstudio.com/_apis/userentitlements?top=10000&api-version=4.1-preview.1"
         $vstsResult = Invoke-RestMethod -Uri $vstsUri -Method Get -ContentType "application/json" `
                                         -Headers @{Authorization=("Basic {0}" -f $vstsAuth)}
-        Write-Output $vstsResult.value
+        $id = ($vstsResult.value | Where-Object { $_.user.mailAddress.ToLower() -eq $Email.ToLower() }).id
+        Write-Output $id
     }
     End
     {
